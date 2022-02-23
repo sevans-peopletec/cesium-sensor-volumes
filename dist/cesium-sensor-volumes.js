@@ -2,7 +2,7 @@
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
 	(global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.CesiumSensorVolumes = factory());
-}(this, (function () { 'use strict';
+})(this, (function () { 'use strict';
 
 	/**
 	 * Cesium Sensor Volumes - https://github.com/Flowm/cesium-sensor-volumes
@@ -233,7 +233,7 @@
 
 	var SensorVolume = "uniform vec4 u_intersectionColor;uniform float u_intersectionWidth;bool inSensorShadow(vec3 coneVertexWC,vec3 pointWC){vec3 D=czm_ellipsoidInverseRadii;vec3 q=D*coneVertexWC;float qMagnitudeSquared=dot(q,q);float test=qMagnitudeSquared-1.0;vec3 temp=(D*pointWC)-q;float d=dot(temp,q);return (d<-test)&&((d/length(temp))<-sqrt(test));}vec4 getIntersectionColor(){return u_intersectionColor;}float getIntersectionWidth(){return u_intersectionWidth;}vec2 sensor2dTextureCoordinates(float sensorRadius,vec3 pointMC){float t=pointMC.z/sensorRadius;float s=1.0+(atan(pointMC.y,pointMC.x)/czm_twoPi);s=s-floor(s);return vec2(s,t);}";
 
-	var CustomSensorVolumeFS = "#ifdef GL_OES_standard_derivatives\n#extension GL_OES_standard_derivatives : enable\n#endif\nuniform bool u_showIntersection;uniform bool u_showThroughEllipsoid;uniform float u_sensorRadius;uniform float u_normalDirection;varying vec3 v_positionWC;varying vec3 v_positionEC;varying vec3 v_normalEC;vec4 getColor(float sensorRadius,vec3 pointEC){czm_materialInput materialInput;vec3 pointMC=(czm_inverseModelView*vec4(pointEC,1.0)).xyz;materialInput.st=sensor2dTextureCoordinates(sensorRadius,pointMC);materialInput.str=pointMC/sensorRadius;vec3 positionToEyeEC=-v_positionEC;materialInput.positionToEyeEC=positionToEyeEC;vec3 normalEC=normalize(v_normalEC);materialInput.normalEC=u_normalDirection*normalEC;czm_material material=czm_getMaterial(materialInput);return mix(czm_phong(normalize(positionToEyeEC),material,czm_lightDirectionEC),vec4(material.diffuse,material.alpha),0.4);}bool isOnBoundary(float value,float epsilon){float width=getIntersectionWidth();float tolerance=width*epsilon;\n#ifdef GL_OES_standard_derivatives\nfloat delta=max(abs(dFdx(value)),abs(dFdy(value)));float pixels=width*delta;float temp=abs(value);return ((temp<tolerance)&&(temp<pixels))||(((delta<(10.0*tolerance))&&((temp-delta)<tolerance))&&(temp<pixels));\n#else\nreturn abs(value)<tolerance;\n#endif\n}vec4 shade(bool isOnBoundary){if(u_showIntersection&&isOnBoundary){return getIntersectionColor();}return getColor(u_sensorRadius,v_positionEC);}float ellipsoidSurfaceFunction(vec3 point){vec3 scaled=czm_ellipsoidInverseRadii*point;return dot(scaled,scaled)-1.0;}void main(){vec3 sensorVertexWC=(czm_model[3]).xyz;vec3 sensorVertexEC=(czm_modelView[3]).xyz;float ellipsoidValue=ellipsoidSurfaceFunction(v_positionWC);if(!u_showThroughEllipsoid){if(ellipsoidValue<0.0){discard;}if(inSensorShadow(sensorVertexWC,v_positionWC)){discard;}}if(distance(v_positionEC,sensorVertexEC)>u_sensorRadius){discard;}bool isOnEllipsoid=isOnBoundary(ellipsoidValue,czm_epsilon3);gl_FragColor=shade(isOnEllipsoid);}";
+	var CustomSensorVolumeFS = "#ifdef GL_OES_standard_derivatives\r\n#extension GL_OES_standard_derivatives : enable\r\n#endif\nuniform bool u_showIntersection;uniform bool u_showThroughEllipsoid;uniform float u_sensorRadius;uniform float u_normalDirection;varying vec3 v_positionWC;varying vec3 v_positionEC;varying vec3 v_normalEC;vec4 getColor(float sensorRadius,vec3 pointEC){czm_materialInput materialInput;vec3 pointMC=(czm_inverseModelView*vec4(pointEC,1.0)).xyz;materialInput.st=sensor2dTextureCoordinates(sensorRadius,pointMC);materialInput.str=pointMC/sensorRadius;vec3 positionToEyeEC=-v_positionEC;materialInput.positionToEyeEC=positionToEyeEC;vec3 normalEC=normalize(v_normalEC);materialInput.normalEC=u_normalDirection*normalEC;czm_material material=czm_getMaterial(materialInput);return mix(czm_phong(normalize(positionToEyeEC),material,czm_lightDirectionEC),vec4(material.diffuse,material.alpha),0.4);}bool isOnBoundary(float value,float epsilon){float width=getIntersectionWidth();float tolerance=width*epsilon;\n#ifdef GL_OES_standard_derivatives\r\nfloat delta=max(abs(dFdx(value)),abs(dFdy(value)));float pixels=width*delta;float temp=abs(value);return ((temp<tolerance)&&(temp<pixels))||(((delta<(10.0*tolerance))&&((temp-delta)<tolerance))&&(temp<pixels));\n#else\nreturn abs(value)<tolerance;\n#endif\n}vec4 shade(bool isOnBoundary){if(u_showIntersection&&isOnBoundary){return getIntersectionColor();}return getColor(u_sensorRadius,v_positionEC);}float ellipsoidSurfaceFunction(vec3 point){vec3 scaled=czm_ellipsoidInverseRadii*point;return dot(scaled,scaled)-1.0;}void main(){vec3 sensorVertexWC=(czm_model[3]).xyz;vec3 sensorVertexEC=(czm_modelView[3]).xyz;float ellipsoidValue=ellipsoidSurfaceFunction(v_positionWC);if(!u_showThroughEllipsoid){if(ellipsoidValue<0.0){discard;}if(inSensorShadow(sensorVertexWC,v_positionWC)){discard;}}if(distance(v_positionEC,sensorVertexEC)>u_sensorRadius){discard;}bool isOnEllipsoid=isOnBoundary(ellipsoidValue,czm_epsilon3);gl_FragColor=shade(isOnEllipsoid);}";
 
 	var CustomSensorVolumeVS = "attribute vec4 position;attribute vec3 normal;varying vec3 v_positionWC;varying vec3 v_positionEC;varying vec3 v_normalEC;void main(){gl_Position=czm_modelViewProjection*position;v_positionWC=(czm_model*position).xyz;v_positionEC=(czm_modelView*position).xyz;v_normalEC=czm_normal*normal;}";
 
@@ -783,15 +783,15 @@
 		}
 	}
 
-	const defaultIntersectionColor = Color.WHITE;
-	const defaultIntersectionWidth = 1.0;
-	const defaultRadius = Number.POSITIVE_INFINITY;
+	const defaultIntersectionColor$2 = Color.WHITE;
+	const defaultIntersectionWidth$2 = 1.0;
+	const defaultRadius$2 = Number.POSITIVE_INFINITY;
 
-	const matrix3Scratch = new Matrix3();
-	const cachedPosition = new Cartesian3();
-	const cachedOrientation = new Quaternion();
+	const matrix3Scratch$2 = new Matrix3();
+	const cachedPosition$2 = new Cartesian3();
+	const cachedOrientation$2 = new Quaternion();
 
-	function assignSpherical(index, array, clock, cone) {
+	function assignSpherical$1(index, array, clock, cone) {
 		var spherical = array[index];
 		if (!defined(spherical)) {
 			spherical = new Spherical();
@@ -812,21 +812,21 @@
 			// No clock angle limits, so this is just a circle.
 			// There might be a hole but we're ignoring it for now.
 			for (angle = 0.0; angle < CesiumMath.TWO_PI; angle += angleStep) {
-				assignSpherical(i++, directions, angle, outerHalfAngle);
+				assignSpherical$1(i++, directions, angle, outerHalfAngle);
 			}
 		} else {
 			// There are clock angle limits.
 			for (angle = minimumClockAngle; angle < maximumClockAngle; angle += angleStep) {
-				assignSpherical(i++, directions, angle, outerHalfAngle);
+				assignSpherical$1(i++, directions, angle, outerHalfAngle);
 			}
-			assignSpherical(i++, directions, maximumClockAngle, outerHalfAngle);
+			assignSpherical$1(i++, directions, maximumClockAngle, outerHalfAngle);
 			if (innerHalfAngle) {
 				for (angle = maximumClockAngle; angle > minimumClockAngle; angle -= angleStep) {
-					assignSpherical(i++, directions, angle, innerHalfAngle);
+					assignSpherical$1(i++, directions, angle, innerHalfAngle);
 				}
-				assignSpherical(i++, directions, minimumClockAngle, innerHalfAngle);
+				assignSpherical$1(i++, directions, minimumClockAngle, innerHalfAngle);
 			} else {
-				assignSpherical(i++, directions, maximumClockAngle, 0.0);
+				assignSpherical$1(i++, directions, maximumClockAngle, 0.0);
 			}
 		}
 		directions.length = i;
@@ -890,8 +890,8 @@
 			var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(conicSensorGraphics._show, time, true);
 
 			if (show) {
-				position = Property.getValueOrUndefined(entity._position, time, cachedPosition);
-				orientation = Property.getValueOrUndefined(entity._orientation, time, cachedOrientation);
+				position = Property.getValueOrUndefined(entity._position, time, cachedPosition$2);
+				orientation = Property.getValueOrUndefined(entity._orientation, time, cachedOrientation$2);
 				show = defined(position) && defined(orientation);
 			}
 
@@ -922,7 +922,7 @@
 			}
 
 			if (!Cartesian3.equals(position, data.position) || !Quaternion.equals(orientation, data.orientation)) {
-				Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, primitive.modelMatrix);
+				Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch$2), position, primitive.modelMatrix);
 				data.position = Cartesian3.clone(position, data.position);
 				data.orientation = Quaternion.clone(orientation, data.orientation);
 			}
@@ -945,10 +945,10 @@
 				data.minimumClockAngle = minimumClockAngle;
 			}
 
-			primitive.radius = Property.getValueOrDefault(conicSensorGraphics._radius, time, defaultRadius);
+			primitive.radius = Property.getValueOrDefault(conicSensorGraphics._radius, time, defaultRadius$2);
 			primitive.lateralSurfaceMaterial = MaterialProperty.getValue(time, conicSensorGraphics._lateralSurfaceMaterial, primitive.lateralSurfaceMaterial);
-			primitive.intersectionColor = Property.getValueOrClonedDefault(conicSensorGraphics._intersectionColor, time, defaultIntersectionColor, primitive.intersectionColor);
-			primitive.intersectionWidth = Property.getValueOrDefault(conicSensorGraphics._intersectionWidth, time, defaultIntersectionWidth);
+			primitive.intersectionColor = Property.getValueOrClonedDefault(conicSensorGraphics._intersectionColor, time, defaultIntersectionColor$2, primitive.intersectionColor);
+			primitive.intersectionWidth = Property.getValueOrDefault(conicSensorGraphics._intersectionWidth, time, defaultIntersectionWidth$2);
 		}
 		return true;
 	};
@@ -1452,7 +1452,7 @@
 		this.lateralSurfaceMaterial = defaultValue(this.lateralSurfaceMaterial, source.lateralSurfaceMaterial);
 	};
 
-	function assignSpherical$1(index, array, clock, cone) {
+	function assignSpherical(index, array, clock, cone) {
 		var spherical = array[index];
 		if (!defined(spherical)) {
 			spherical = new Spherical();
@@ -1472,10 +1472,10 @@
 		var theta = Math.atan(tanX / tanY);
 		var cone = Math.atan(Math.sqrt((tanX * tanX) + (tanY * tanY)));
 
-		assignSpherical$1(0, directions, theta, cone);
-		assignSpherical$1(1, directions, CesiumMath.toRadians(180.0) - theta, cone);
-		assignSpherical$1(2, directions, CesiumMath.toRadians(180.0) + theta, cone);
-		assignSpherical$1(3, directions, -theta, cone);
+		assignSpherical(0, directions, theta, cone);
+		assignSpherical(1, directions, CesiumMath.toRadians(180.0) - theta, cone);
+		assignSpherical(2, directions, CesiumMath.toRadians(180.0) + theta, cone);
+		assignSpherical(3, directions, -theta, cone);
 
 		directions.length = 4;
 		rectangularSensor._customSensor.directions = directions;
@@ -1617,13 +1617,13 @@
 		return destroyObject(this);
 	};
 
-	const defaultIntersectionColor$2 = Color.WHITE;
-	const defaultIntersectionWidth$2 = 1.0;
-	const defaultRadius$2 = Number.POSITIVE_INFINITY;
+	const defaultIntersectionColor = Color.WHITE;
+	const defaultIntersectionWidth = 1.0;
+	const defaultRadius = Number.POSITIVE_INFINITY;
 
-	const matrix3Scratch$2 = new Matrix3();
-	const cachedPosition$2 = new Cartesian3();
-	const cachedOrientation$2 = new Quaternion();
+	const matrix3Scratch = new Matrix3();
+	const cachedPosition = new Cartesian3();
+	const cachedOrientation = new Quaternion();
 
 	/**
 	 * A {@link Visualizer} which maps {@link Entity#rectangularSensor} to a {@link RectangularSensor}.
@@ -1682,8 +1682,8 @@
 			var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(rectangularSensorGraphics._show, time, true);
 
 			if (show) {
-				position = Property.getValueOrUndefined(entity._position, time, cachedPosition$2);
-				orientation = Property.getValueOrUndefined(entity._orientation, time, cachedOrientation$2);
+				position = Property.getValueOrUndefined(entity._position, time, cachedPosition);
+				orientation = Property.getValueOrUndefined(entity._orientation, time, cachedOrientation);
 				show = defined(position) && defined(orientation);
 			}
 
@@ -1710,7 +1710,7 @@
 			}
 
 			if (!Cartesian3.equals(position, data.position) || !Quaternion.equals(orientation, data.orientation)) {
-				Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch$2), position, primitive.modelMatrix);
+				Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, primitive.modelMatrix);
 				data.position = Cartesian3.clone(position, data.position);
 				data.orientation = Quaternion.clone(orientation, data.orientation);
 			}
@@ -1718,10 +1718,10 @@
 			primitive.show = true;
 			primitive.xHalfAngle = Property.getValueOrDefault(rectangularSensorGraphics._xHalfAngle, time, CesiumMath.PI_OVER_TWO);
 			primitive.yHalfAngle = Property.getValueOrDefault(rectangularSensorGraphics._yHalfAngle, time, CesiumMath.PI_OVER_TWO);
-			primitive.radius = Property.getValueOrDefault(rectangularSensorGraphics._radius, time, defaultRadius$2);
+			primitive.radius = Property.getValueOrDefault(rectangularSensorGraphics._radius, time, defaultRadius);
 			primitive.lateralSurfaceMaterial = MaterialProperty.getValue(time, rectangularSensorGraphics._lateralSurfaceMaterial, primitive.lateralSurfaceMaterial);
-			primitive.intersectionColor = Property.getValueOrClonedDefault(rectangularSensorGraphics._intersectionColor, time, defaultIntersectionColor$2, primitive.intersectionColor);
-			primitive.intersectionWidth = Property.getValueOrDefault(rectangularSensorGraphics._intersectionWidth, time, defaultIntersectionWidth$2);
+			primitive.intersectionColor = Property.getValueOrClonedDefault(rectangularSensorGraphics._intersectionColor, time, defaultIntersectionColor, primitive.intersectionColor);
+			primitive.intersectionWidth = Property.getValueOrDefault(rectangularSensorGraphics._intersectionWidth, time, defaultIntersectionWidth);
 		}
 		return true;
 	};
@@ -1962,4 +1962,4 @@
 
 	return cesiumSensorVolumes;
 
-})));
+}));
